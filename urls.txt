@@ -1,0 +1,7 @@
+// 按行添加监控列表，以http://或者https://开头
+http://www.baidu.com
+http://www.163.com
+http://www.sina.com
+http://psnine.com
+http://www.qq.com
+http://blog.csdn.net

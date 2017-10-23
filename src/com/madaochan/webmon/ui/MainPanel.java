@@ -1,7 +1,7 @@
 package com.madaochan.webmon.ui;
 
 import com.madaochan.webmon.connection.Connection;
-import com.madaochan.webmon.debug.DebugUtils;
+import com.madaochan.webmon.controller.MainPanelController;
 
 import javax.swing.*;
 import java.lang.ref.WeakReference;
@@ -16,12 +16,17 @@ public class MainPanel {
     private JTextArea textAreaInfo;
     private JButton buttonQuery;
 
+    private MainPanelController controller;
+
     public MainPanel() {
+
+        controller = new MainPanelController();
 
         buttonQuery.addActionListener(e -> {
             buttonQuery.setEnabled(false);
-            textAreaInfo.insert("----------",0);
-            List<String> urlList = DebugUtils.buildTestUrlList();
+            textAreaInfo.insert("----------\r\n",0);
+
+            List<String> urlList = controller.getUrlList();
             for (String url : urlList) {
                 ConnectionRunnable runnable = new ConnectionRunnable(textAreaInfo, url);
                 Thread thread = new Thread(runnable);
