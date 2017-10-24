@@ -22,12 +22,21 @@ public class FileUtils {
             return prop;
         }
 
+        FileInputStream in = null;
         try {
-            FileInputStream in = new FileInputStream(file);
+            in = new FileInputStream(file);
             prop.load(in);
             in.close();
         } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            if (in != null) {
+                try {
+                    in.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
         return prop;
     }

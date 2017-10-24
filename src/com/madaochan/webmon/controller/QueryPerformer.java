@@ -6,7 +6,12 @@ import com.madaochan.webmon.time.TimeUtils;
 import java.util.List;
 import java.util.Vector;
 
-public class ResponseController implements OnResponseListener {
+/**
+ * 网页状态查询执行器
+ * @author MadaoChan
+ * @since 2017/10/24
+ */
+public class QueryPerformer implements OnResponseListener {
 
     private final String START_TEXT = "----------------------\r\n";
     private final String END_TEXT = "----------------------\r\n";
@@ -18,7 +23,7 @@ public class ResponseController implements OnResponseListener {
     private int count;
     private RefreshListener refreshListener;
 
-    public ResponseController(List<String> urlList, String oldText, RefreshListener refreshListener) {
+    public QueryPerformer(List<String> urlList, String oldText, RefreshListener refreshListener) {
         this.urlList = new Vector<>(urlList);
         this.oldText = oldText;
         this.refreshListener = refreshListener;
@@ -38,7 +43,15 @@ public class ResponseController implements OnResponseListener {
         threadList.setSize(count);
     }
 
-    public void doQuery() {
+    /**
+     * 执行查询
+     */
+    public void performQuery() {
+
+        if (count == 0) {
+            passContent("urls.txt无内容，请添加网页列表后重启程序。");
+        }
+
         for(int i=0; i<count; i++) {
             ConnectionRunnable connectionRunnable = new ConnectionRunnable(i, urlList.get(i), this);
             threadList.add(connectionRunnable);
@@ -48,7 +61,7 @@ public class ResponseController implements OnResponseListener {
     }
 
     @Override
-    public synchronized void onThreadStart(int position) {
+    public synchronized void onQueryThreadStart(int position) {
         System.out.println("ThreadStart " + position);
         if (position >= 0 && position < count) {
             String start = TimeUtils.getCurrentTime() + "\t查询中…\t" + urlList.get(position) + "\r\n";
@@ -58,7 +71,7 @@ public class ResponseController implements OnResponseListener {
     }
 
     @Override
-    public synchronized void onThreadFinish(int position, String resCode) {
+    public synchronized void onQueryThreadFinish(int position, String resCode) {
         System.out.println("ThreadFinish " + position + " " + resCode);
         if (position >= 0 && position < count) {
             doneList.set(position, true);
@@ -68,6 +81,9 @@ public class ResponseController implements OnResponseListener {
         }
     }
 
+    /**
+     * 检查完成情况，全部完成则发告知RefreshListener已经全部完成查询
+     */
     private void parseDoneList() {
         if (doneList == null) {
             return;
@@ -98,6 +114,12 @@ public class ResponseController implements OnResponseListener {
         }
     }
 
+    private void passContent(String content) {
+        if (refreshListener != null) {
+            refreshListener.refresh(content);
+        }
+    }
+
     private synchronized void passResult(Vector<String> contentList, boolean isAllDone) {
 
         if (refreshListener == null) {
@@ -124,6 +146,9 @@ public class ResponseController implements OnResponseListener {
         }
     }
 
+    /**
+     * 获取单个网址的状态Runnable
+     */
     private static class ConnectionRunnable implements Runnable {
 
         private int position;
@@ -146,14 +171,14 @@ public class ResponseController implements OnResponseListener {
         public void run() {
 
             if (listener != null) {
-                listener.onThreadStart(position);
+                listener.onQueryThreadStart(position);
             } else {
                 System.out.println("ThreadStart listenerRef null " + position);
             }
 
             String resCode = new Connection().getResponseCode(url);
             if (!isStop && listener != null) {
-                listener.onThreadFinish(position, resCode);
+                listener.onQueryThreadFinish(position, resCode);
             } else {
                 System.out.println("ThreadFinish listenerRef null " + position);
             }

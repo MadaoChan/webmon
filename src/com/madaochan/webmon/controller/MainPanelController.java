@@ -9,7 +9,9 @@ import java.util.List;
 import java.util.Properties;
 
 /**
- * Created by MadaoChan on 2017/10/23.
+ * 主界面控制器
+ * @author MadaoChan
+ * @since 2017/10/23
  */
 public class MainPanelController implements RefreshListener {
 
@@ -26,7 +28,7 @@ public class MainPanelController implements RefreshListener {
     private JTextArea textAreaInfo;
     private JButton buttonQuery;
 
-    private ResponseController responseController;
+    private QueryPerformer queryPerformer;
 
     public MainPanelController(JTextArea textAreaInfo, JButton buttonQuery) {
         this.textAreaInfo = textAreaInfo;
@@ -83,8 +85,8 @@ public class MainPanelController implements RefreshListener {
      */
     public void doQuery() {
         buttonQuery.setEnabled(false);
-        responseController = new ResponseController(urlList, textAreaInfo.getText(), this);
-        responseController.doQuery();
+        queryPerformer = new QueryPerformer(urlList, textAreaInfo.getText(), this);
+        queryPerformer.performQuery();
     }
 
     /**
@@ -94,6 +96,10 @@ public class MainPanelController implements RefreshListener {
         textAreaInfo.setText("");
     }
 
+    /**
+     * 查询进度回调
+     * @param result 中间结果
+     */
     @Override
     public void refresh(String result) {
         textAreaInfo.setText("");
@@ -101,12 +107,17 @@ public class MainPanelController implements RefreshListener {
         textAreaInfo.setCaretPosition(textAreaInfo.getDocument().getLength());
     }
 
+    /**
+     * 全部查询完成回调
+     * @param oldText 查询前的字符串
+     * @param result 总查询结果
+     */
     @Override
     public void allDoneRefresh(String oldText, String result) {
 
-        if (responseController != null) {
-            responseController.destroy();
-            responseController = null;
+        if (queryPerformer != null) {
+            queryPerformer.destroy();
+            queryPerformer = null;
         }
 
         textAreaInfo.setText("");
@@ -123,6 +134,11 @@ public class MainPanelController implements RefreshListener {
         //TODO 发邮件
     }
 
+    /**
+     * 查询结果写文件
+     * @param result 查询结果
+     * @return 写入结果字符串
+     */
     private String writeResultToFile(String result) {
         FileUtils fileUtils = new FileUtils();
         String path = System.getProperty("user.dir");
@@ -137,14 +153,10 @@ public class MainPanelController implements RefreshListener {
         return writeResult;
     }
 
-    public List<String> getUrlList() {
-        return urlList;
-    }
-
     public void destroy() {
-        if (responseController != null) {
-            responseController.destroy();
-            responseController = null;
+        if (queryPerformer != null) {
+            queryPerformer.destroy();
+            queryPerformer = null;
         }
         textAreaInfo = null;
         buttonQuery = null;
