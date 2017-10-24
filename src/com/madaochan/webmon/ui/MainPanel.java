@@ -12,6 +12,8 @@ public class MainPanel {
     private JPanel panelMain;
     private JTextArea textAreaInfo;
     private JButton buttonQuery;
+    private JButton buttonClean;
+    private JScrollPane scrollPane;
 
     private MainPanelController controller;
 
@@ -19,6 +21,9 @@ public class MainPanel {
 
         buttonQuery.addActionListener(e -> {
             getController().doQuery();
+        });
+        buttonClean.addActionListener(e -> {
+            getController().doClean();
         });
     }
 

@@ -80,7 +80,7 @@ public class FileUtils {
             if (!isCreated) {
                 return false;
             }
-            fop = new FileOutputStream(file);
+            fop = new FileOutputStream(file, true);
             fop.write(content.getBytes());
             fop.flush();
             fop.close();

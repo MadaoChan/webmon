@@ -1,11 +1,9 @@
 package com.madaochan.webmon.controller;
 
-import com.madaochan.webmon.connection.Connection;
 import com.madaochan.webmon.file.FileUtils;
-import com.madaochan.webmon.ui.MainPanel;
+import com.madaochan.webmon.time.TimeUtils;
 
 import javax.swing.*;
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -13,10 +11,11 @@ import java.util.Properties;
 /**
  * Created by MadaoChan on 2017/10/23.
  */
-public class MainPanelController {
+public class MainPanelController implements RefreshListener {
 
     private final static String CONFIG_FILE_NAME = "/config.txt";
     private final static String URL_LIST_FILE_NAME = "/urls.txt";
+    private final static String LOG_FILE_NAME = "/log.txt";
     private final static int DEFAULT_INTERVAL_S = 60 * 60;  // 1小时
 
     private String username;
@@ -26,6 +25,8 @@ public class MainPanelController {
     private List<String> urlList;
     private JTextArea textAreaInfo;
     private JButton buttonQuery;
+
+    private ResponseController responseController;
 
     public MainPanelController(JTextArea textAreaInfo, JButton buttonQuery) {
         this.textAreaInfo = textAreaInfo;
@@ -81,18 +82,59 @@ public class MainPanelController {
      * 查询状态
      */
     public void doQuery() {
-//        buttonQuery.setEnabled(false);
-//        textAreaInfo.append("----------\r\n");
-//
-//        for (String url : urlList) {
-//            ConnectionRunnable runnable = new ConnectionRunnable(textAreaInfo, url);
-//            Thread thread = new Thread(runnable);
-//            thread.start();
-//        }
-//        buttonQuery.setEnabled(true);
+        buttonQuery.setEnabled(false);
+        responseController = new ResponseController(urlList, textAreaInfo.getText(), this);
+        responseController.doQuery();
+    }
 
-        ResponseResult responseResult = new ResponseResult(urlList, textAreaInfo);
-        responseResult.doQuery();
+    /**
+     * 清屏
+     */
+    public void doClean() {
+        textAreaInfo.setText("");
+    }
+
+    @Override
+    public void refresh(String result) {
+        textAreaInfo.setText("");
+        textAreaInfo.setText(result);
+        textAreaInfo.setCaretPosition(textAreaInfo.getDocument().getLength());
+    }
+
+    @Override
+    public void allDoneRefresh(String oldText, String result) {
+
+        if (responseController != null) {
+            responseController.destroy();
+            responseController = null;
+        }
+
+        textAreaInfo.setText("");
+        textAreaInfo.append(oldText);
+        textAreaInfo.append(result);
+
+        // 写文件
+        String writeLog = writeResultToFile(result);
+
+        textAreaInfo.append(writeLog);
+        textAreaInfo.setCaretPosition(textAreaInfo.getDocument().getLength());
+        buttonQuery.setEnabled(true);
+
+        //TODO 发邮件
+    }
+
+    private String writeResultToFile(String result) {
+        FileUtils fileUtils = new FileUtils();
+        String path = System.getProperty("user.dir");
+
+        boolean isWriteSuccess = fileUtils.writeFile(path + LOG_FILE_NAME, result);
+        String writeResult;
+        if (isWriteSuccess) {
+            writeResult = TimeUtils.getCurrentTime() + "\t查询记录写入" + LOG_FILE_NAME + "成功！\r\n";
+        } else {
+            writeResult = TimeUtils.getCurrentTime() + "\t查询记录写入失败！\r\n";
+        }
+        return writeResult;
     }
 
     public List<String> getUrlList() {
@@ -100,33 +142,11 @@ public class MainPanelController {
     }
 
     public void destroy() {
+        if (responseController != null) {
+            responseController.destroy();
+            responseController = null;
+        }
         textAreaInfo = null;
         buttonQuery = null;
-    }
-
-    private static class ConnectionRunnable implements Runnable {
-
-        private WeakReference<JTextArea> textAreaRef;
-        private String url;
-        private boolean isStop = false;
-
-        public ConnectionRunnable(JTextArea textArea, String url) {
-            this.textAreaRef = new WeakReference<>(textArea);
-            this.url = url;
-        }
-
-        public void setStop(boolean stop) {
-            isStop = stop;
-        }
-
-        @Override
-        public void run() {
-            String response = new Connection().getResponseCode(url);
-            JTextArea textArea = textAreaRef.get();
-            if (!isStop && textArea != null) {
-                textArea.append(response);
-                textArea.invalidate();
-            }
-        }
     }
 }
