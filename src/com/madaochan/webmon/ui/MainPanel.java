@@ -1,11 +1,8 @@
 package com.madaochan.webmon.ui;
 
-import com.madaochan.webmon.connection.Connection;
 import com.madaochan.webmon.controller.MainPanelController;
 
 import javax.swing.*;
-import java.lang.ref.WeakReference;
-import java.util.List;
 
 /**
  * @author MadaoChan
@@ -20,20 +17,16 @@ public class MainPanel {
 
     public MainPanel() {
 
-        controller = new MainPanelController();
-
         buttonQuery.addActionListener(e -> {
-            buttonQuery.setEnabled(false);
-            textAreaInfo.insert("----------\r\n",0);
-
-            List<String> urlList = controller.getUrlList();
-            for (String url : urlList) {
-                ConnectionRunnable runnable = new ConnectionRunnable(textAreaInfo, url);
-                Thread thread = new Thread(runnable);
-                thread.start();
-            }
-            buttonQuery.setEnabled(true);
+            getController().doQuery();
         });
+    }
+
+    private MainPanelController getController() {
+        if (controller == null) {
+            controller = new MainPanelController(textAreaInfo, buttonQuery);
+        }
+        return controller;
     }
 
     public static void main(String[] args) {
@@ -46,34 +39,9 @@ public class MainPanel {
 
     @Override
     protected void finalize() throws Throwable {
-        System.out.println("finalize");
         super.finalize();
-    }
-
-    private static class ConnectionRunnable implements Runnable {
-
-        private WeakReference<JTextArea> textAreaRef;
-        private String url;
-        private boolean isStop = false;
-
-        public ConnectionRunnable(JTextArea textArea, String url) {
-            this.textAreaRef = new WeakReference<>(textArea);
-            this.url = url;
-        }
-
-        public void setStop(boolean stop) {
-            isStop = stop;
-        }
-
-        @Override
-        public void run() {
-            String response = new Connection().getResponseCode(url);
-            JTextArea textArea = textAreaRef.get();
-            if (!isStop && textArea != null) {
-                textArea.insert(response, 0);
-                textArea.invalidate();
-            }
+        if (controller != null) {
+            controller.destroy();
         }
     }
-
 }

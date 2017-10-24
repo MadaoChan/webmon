@@ -5,3 +5,4 @@ http://www.sina.com
 http://psnine.com
 http://www.qq.com
 http://blog.csdn.net
+https://www.google.com

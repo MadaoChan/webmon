@@ -59,6 +59,44 @@ public class FileUtils {
         return lineList;
     }
 
+    /**
+     * 写文件
+     * @param location 路径
+     * @param content 内容
+     * @return 是否成功
+     */
+    public boolean writeFile(String location, String content) {
 
+        FileOutputStream fop = null;
+        File file;
+
+        try {
+            file = new File(location);
+            boolean isCreated = true;
+
+            if (!file.exists()) {
+                isCreated = file.createNewFile();
+            }
+            if (!isCreated) {
+                return false;
+            }
+            fop = new FileOutputStream(file);
+            fop.write(content.getBytes());
+            fop.flush();
+            fop.close();
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            if (fop != null) {
+                try {
+                    fop.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
 
 }

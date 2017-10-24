@@ -2,6 +2,7 @@ package com.madaochan.webmon.connection;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -47,9 +48,10 @@ public class Connection {
             conn.setDoOutput(true);
             conn.setConnectTimeout(timeOutMs);
             conn.connect();
-            System.out.println(conn.getResponseCode());
             response = format.format(System.currentTimeMillis()) + "\tRET:" + conn.getResponseCode() + "\t" + urlStr;
             conn.disconnect();
+        } catch (SocketTimeoutException e) {
+            response = format.format(System.currentTimeMillis()) + "\t连接超时" + "\t" + urlStr;
         } catch (IOException e) {
             e.printStackTrace();
             response = format.format(System.currentTimeMillis()) + "\t" + e.toString() + "\t" + urlStr;
@@ -58,6 +60,6 @@ public class Connection {
                 conn.disconnect();
             }
         }
-        return response + " \r\n";
+        return response;
     }
 }
