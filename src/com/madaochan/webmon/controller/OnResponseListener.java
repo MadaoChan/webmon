@@ -1,7 +1,9 @@
 package com.madaochan.webmon.controller;
 
 /**
- * 单个网页状态监听器
+ * 单个网页查询状态监听器
+ * @author MadaoChan
+ * @since 2017/10/25
  */
 public interface OnResponseListener {
 

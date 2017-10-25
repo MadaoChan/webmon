@@ -5,6 +5,7 @@ import com.madaochan.webmon.controller.MainPanelController;
 import javax.swing.*;
 
 /**
+ * 主界面
  * @author MadaoChan
  * @since 2017/10/23
  */

@@ -4,11 +4,13 @@ import java.util.Vector;
 
 /**
  * 界面刷新监听器
+ * @author MadaoChan
+ * @since 2017/10/25
  */
 public interface RefreshListener {
 
     /**
-     * 查询完毕刷新
+     * 刷新界面回调
      * @param offset 插入偏移量
      * @param result 总结果
      * @param isAllDone 是否已经全部查询完毕

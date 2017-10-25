@@ -2,6 +2,11 @@ package com.madaochan.webmon.time;
 
 import java.text.SimpleDateFormat;
 
+/**
+ * 时间类
+ * @author MadaoChan
+ * @since 2017/10/25
+ */
 public class TimeUtils {
 
     /**

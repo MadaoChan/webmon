@@ -1,6 +1,7 @@
 package com.madaochan.webmon.controller;
 
 import com.madaochan.webmon.connection.Connection;
+import com.madaochan.webmon.constants.Constants;
 import com.madaochan.webmon.file.FileUtils;
 import com.madaochan.webmon.time.TimeUtils;
 
@@ -22,29 +23,25 @@ import java.util.concurrent.TimeUnit;
  */
 public class MainPanelController implements RefreshListener {
 
-    private final static String CONFIG_FILE_NAME = "/config.txt";
-    private final static String URL_LIST_FILE_NAME = "/urls.txt";
-    private final static String LOG_FILE_NAME = "/log.txt";
-
-    private final static String POLL_INTERVAL_PROP_KEY = "poll_interval";
-
-    private final static String URL_TAG_SPLITTER = ",";
-
-    // 默认轮询时间15分钟
-    private final static int DEFAULT_INTERVAL_M = 15;
-
     private String username;
     private String password;
 
+    // 网址URL列表
     private List<String> urlList;
+
+    // 网址标签列表
     private List<String> tagList;
+
+    // 查询执行器
+    private QueryPerformer queryPerformer;
+
+    //
+    private ScheduledExecutorService scheduledExecutorService;
+
     private JButton buttonQuery;
     private JTextPane textPaneMain;
     private JFormattedTextField textFieldInterval;
     private JLabel labelState;
-
-    private QueryPerformer queryPerformer;
-    private ScheduledExecutorService scheduledExecutorService;
 
     public MainPanelController(JTextPane textPaneMain, JButton buttonQuery,
                                JFormattedTextField textFieldInterval, JLabel labelState) {
@@ -73,8 +70,8 @@ public class MainPanelController implements RefreshListener {
      */
     private void refreshConfig() {
         FileUtils fileUtils = new FileUtils();
-        ensureProperties(fileUtils.readProperties(fileUtils.getRootDir() + CONFIG_FILE_NAME));
-        ensureUrls(fileUtils.readFile(fileUtils.getRootDir() + URL_LIST_FILE_NAME));
+        ensureProperties(fileUtils.readProperties(fileUtils.getRootDir() + Constants.CONFIG_FILE_NAME));
+        ensureUrls(fileUtils.readFile(fileUtils.getRootDir() + Constants.URL_LIST_FILE_NAME));
     }
 
     /**
@@ -84,10 +81,10 @@ public class MainPanelController implements RefreshListener {
     private void ensureProperties(Properties prop) {
         username = prop.getProperty("username");
         password = prop.getProperty("password");
-        int interval = DEFAULT_INTERVAL_M;
+        int interval = Constants.DEFAULT_INTERVAL_M;
         try {
-            interval = Integer.valueOf(prop.getProperty(POLL_INTERVAL_PROP_KEY));
-            interval = (interval > 0) ? interval : DEFAULT_INTERVAL_M;
+            interval = Integer.valueOf(prop.getProperty(Constants.POLL_INTERVAL_PROP_KEY));
+            interval = (interval > 0) ? interval : Constants.DEFAULT_INTERVAL_M;
         } catch (NumberFormatException e) {
             e.printStackTrace();
         }
@@ -118,7 +115,7 @@ public class MainPanelController implements RefreshListener {
             }
 
             // 分离网页标签和网页URL，例：百度,http://www.baidu.com
-            String[] tagUrl = url.split(URL_TAG_SPLITTER, 2);
+            String[] tagUrl = url.split(Constants.URL_TAG_SPLITTER, 2);
 
             if (tagUrl.length == 2) {
 
@@ -166,10 +163,10 @@ public class MainPanelController implements RefreshListener {
         }
 
         // 获取自定义轮询时间
-        int interval = DEFAULT_INTERVAL_M;
+        int interval = Constants.DEFAULT_INTERVAL_M;
         try {
             interval = Integer.valueOf(textFieldInterval.getText());
-            interval = (interval > 0) ? interval : DEFAULT_INTERVAL_M;
+            interval = (interval > 0) ? interval : Constants.DEFAULT_INTERVAL_M;
         } catch (NumberFormatException e) {
             e.printStackTrace();
         }
@@ -179,7 +176,7 @@ public class MainPanelController implements RefreshListener {
         textFieldInterval.setEditable(false);
 
         // 时间写入配置文件
-        writeProperties(POLL_INTERVAL_PROP_KEY, String.valueOf(interval));
+        writeProperties(Constants.POLL_INTERVAL_PROP_KEY, String.valueOf(interval));
 
         final long intervalMs = interval * 60 * 1000;
 
@@ -214,7 +211,7 @@ public class MainPanelController implements RefreshListener {
      */
     private void writeProperties(String key, String value) {
         FileUtils fileUtils = new FileUtils();
-        fileUtils.writeProperties(fileUtils.getRootDir() + CONFIG_FILE_NAME, key, value, "");
+        fileUtils.writeProperties(fileUtils.getRootDir() + Constants.CONFIG_FILE_NAME, key, value, "");
     }
 
     @Override
@@ -292,10 +289,10 @@ public class MainPanelController implements RefreshListener {
     private String writeResultToFile(String result) {
         FileUtils fileUtils = new FileUtils();
 
-        boolean isWriteSuccess = fileUtils.writeFile(fileUtils.getRootDir() + LOG_FILE_NAME, result);
+        boolean isWriteSuccess = fileUtils.writeFile(fileUtils.getRootDir() + Constants.LOG_FILE_NAME, result);
         String writeResult;
         if (isWriteSuccess) {
-            writeResult = TimeUtils.getCurrentTime() + "\t查询记录写入" + LOG_FILE_NAME + "成功！\r\n";
+            writeResult = TimeUtils.getCurrentTime() + "\t查询记录写入" + Constants.LOG_FILE_NAME + "成功！\r\n";
         } else {
             writeResult = TimeUtils.getCurrentTime() + "\t查询记录写入失败！\r\n";
         }
