@@ -17,7 +17,7 @@ public class FileUtils {
      * @return 目录
      */
     public String getRootDir() {
-        return System.getProperty("user.dir");
+        return System.getProperty("user.dir") + File.separator;
     }
 
     /**

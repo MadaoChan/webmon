@@ -3,8 +3,11 @@ package com.madaochan.webmon.controller;
 import com.madaochan.webmon.connection.Connection;
 import com.madaochan.webmon.constants.Constants;
 import com.madaochan.webmon.file.FileUtils;
+import com.madaochan.webmon.mail.SendMailRunnable;
 import com.madaochan.webmon.time.TimeUtils;
 
+import javax.mail.event.TransportEvent;
+import javax.mail.event.TransportListener;
 import javax.swing.*;
 import javax.swing.text.*;
 import java.awt.*;
@@ -21,7 +24,7 @@ import java.util.concurrent.TimeUnit;
  * @author MadaoChan
  * @since 2017/10/23
  */
-public class MainPanelController implements RefreshListener {
+public class MainPanelController implements RefreshListener, TransportListener {
 
     private String username;
     private String password;
@@ -70,8 +73,8 @@ public class MainPanelController implements RefreshListener {
      */
     private void refreshConfig() {
         FileUtils fileUtils = new FileUtils();
-        ensureProperties(fileUtils.readProperties(fileUtils.getRootDir() + Constants.CONFIG_FILE_NAME));
-        ensureUrls(fileUtils.readFile(fileUtils.getRootDir() + Constants.URL_LIST_FILE_NAME));
+        ensureProperties(fileUtils.readProperties(fileUtils.getRootDir() + Constants.CONFIG_FILENAME));
+        ensureUrls(fileUtils.readFile(fileUtils.getRootDir() + Constants.URL_LIST_FILENAME));
     }
 
     /**
@@ -115,7 +118,7 @@ public class MainPanelController implements RefreshListener {
             }
 
             // 分离网页标签和网页URL，例：百度,http://www.baidu.com
-            String[] tagUrl = url.split(Constants.URL_TAG_SPLITTER, 2);
+            String[] tagUrl = url.split(Constants.SPLITTER, 2);
 
             if (tagUrl.length == 2) {
 
@@ -211,7 +214,7 @@ public class MainPanelController implements RefreshListener {
      */
     private void writeProperties(String key, String value) {
         FileUtils fileUtils = new FileUtils();
-        fileUtils.writeProperties(fileUtils.getRootDir() + Constants.CONFIG_FILE_NAME, key, value, "");
+        fileUtils.writeProperties(fileUtils.getRootDir() + Constants.CONFIG_FILENAME, key, value, "");
     }
 
     @Override
@@ -236,6 +239,9 @@ public class MainPanelController implements RefreshListener {
             }
             String writeLog = writeResultToFile(totalResult.toString());
             insertTextToTextPane(writeLog, textPaneMain.getDocument().getLength());
+
+            sendEmail(totalResult.toString());
+
             buttonQuery.setEnabled(true);
         }
     }
@@ -289,14 +295,23 @@ public class MainPanelController implements RefreshListener {
     private String writeResultToFile(String result) {
         FileUtils fileUtils = new FileUtils();
 
-        boolean isWriteSuccess = fileUtils.writeFile(fileUtils.getRootDir() + Constants.LOG_FILE_NAME, result);
+        boolean isWriteSuccess = fileUtils.writeFile(fileUtils.getRootDir() + Constants.LOG_FILENAME, result);
         String writeResult;
         if (isWriteSuccess) {
-            writeResult = TimeUtils.getCurrentTime() + "\t查询记录写入" + Constants.LOG_FILE_NAME + "成功！\r\n";
+            writeResult = TimeUtils.getCurrentTime() + "\t查询记录写入" + Constants.LOG_FILENAME + "成功！\r\n";
         } else {
             writeResult = TimeUtils.getCurrentTime() + "\t查询记录写入失败！\r\n";
         }
         return writeResult;
+    }
+
+    /**
+     * 查询结果发送邮件
+     * @param result 结果
+     */
+    private void sendEmail(String result) {
+        Thread thread = new Thread(new SendMailRunnable(result, this));
+//        thread.start();
     }
 
     public void destroy() {
@@ -308,5 +323,20 @@ public class MainPanelController implements RefreshListener {
         textPaneMain = null;
         textFieldInterval  = null;
         labelState = null;
+    }
+
+    @Override
+    public void messageDelivered(TransportEvent transportEvent) {
+        System.out.print("邮件全部发完");
+    }
+
+    @Override
+    public void messageNotDelivered(TransportEvent transportEvent) {
+        System.out.print("邮件发不出");
+    }
+
+    @Override
+    public void messagePartiallyDelivered(TransportEvent transportEvent) {
+        System.out.print("邮件部分发完");
     }
 }

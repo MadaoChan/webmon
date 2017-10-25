@@ -1,0 +1,14 @@
+// smtp主机
+smtp_host=smtp.qq.com
+// smtp端口
+smtp_port=465
+// 是否需要SSL（1需要，0不需要）
+use_ssl=1
+// 发送邮件账号
+username=123@example.com
+// 密码
+password=123456
+// 主题
+subject=subject
+// 收件人列表（用半角逗号分隔）
+to=456@example.com
