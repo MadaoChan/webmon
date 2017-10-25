@@ -6,7 +6,9 @@ import java.util.List;
 import java.util.Properties;
 
 /**
- * Created by MadaoChan on 2017/10/23.
+ * 文件操作类
+ * @author MadaoChan
+ * @since 2017/10/24
  */
 public class FileUtils {
 

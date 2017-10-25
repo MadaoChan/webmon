@@ -3,25 +3,24 @@
   <grid id="27dc6" binding="panelMain" layout-manager="GridLayoutManager" row-count="4" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
     <margin top="20" left="0" bottom="20" right="0"/>
     <constraints>
-      <xy x="20" y="20" width="752" height="638"/>
+      <xy x="20" y="20" width="1028" height="743"/>
     </constraints>
     <properties/>
     <border type="none"/>
     <children>
-      <scrollpane id="f7963" binding="scrollPane">
+      <scrollpane id="4108a">
         <constraints>
           <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false">
-            <minimum-size width="640" height="480"/>
+            <minimum-size width="1024" height="768"/>
+            <preferred-size width="1024" height="768"/>
           </grid>
         </constraints>
         <properties/>
         <border type="none"/>
         <children>
-          <component id="43c1a" class="javax.swing.JTextArea" binding="textAreaInfo">
+          <component id="f7e6a" class="javax.swing.JTextPane" binding="textPaneMain">
             <constraints/>
-            <properties>
-              <editable value="false"/>
-            </properties>
+            <properties/>
           </component>
         </children>
       </scrollpane>

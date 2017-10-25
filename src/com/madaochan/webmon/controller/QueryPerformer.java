@@ -19,13 +19,14 @@ public class QueryPerformer implements OnResponseListener {
     private Vector<String> resultList;
     private Vector<Boolean> doneList;
     private Vector<ConnectionRunnable> threadList;
-    private String oldText;
     private int count;
     private RefreshListener refreshListener;
 
-    public QueryPerformer(List<String> urlList, String oldText, RefreshListener refreshListener) {
+    private int offset;
+
+    public QueryPerformer(List<String> urlList, int offset, RefreshListener refreshListener) {
         this.urlList = new Vector<>(urlList);
-        this.oldText = oldText;
+        this.offset = offset;
         this.refreshListener = refreshListener;
         init();
     }
@@ -64,7 +65,9 @@ public class QueryPerformer implements OnResponseListener {
     public synchronized void onQueryThreadStart(int position) {
         System.out.println("ThreadStart " + position);
         if (position >= 0 && position < count) {
-            String start = TimeUtils.getCurrentTime() + "\t查询中…\t" + urlList.get(position) + "\r\n";
+            String start = TimeUtils.getCurrentTime()
+                    + "\t" + Connection.QUERYING_STATE + "\t" + urlList.get(position)
+                    + "\r\n";
             resultList.set(position, start);
             passResult(resultList, false);
         }
@@ -103,6 +106,36 @@ public class QueryPerformer implements OnResponseListener {
         }
     }
 
+    /**
+     * 传递普通信息到RefreshListener
+     * @param content 普通信息
+     */
+    private synchronized void passContent(String content) {
+        if (refreshListener != null) {
+            Vector<String> contentList = new Vector<>();
+            contentList.add(content);
+            refreshListener.refresh(offset, contentList, false);
+        }
+    }
+
+    /**
+     * 传递查询结果到RefreshListener
+     * @param contentList 结果列表
+     * @param isAllDone 是否已经全部完成查询
+     */
+    private synchronized void passResult(Vector<String> contentList, boolean isAllDone) {
+
+        if (refreshListener == null || contentList == null) {
+            return;
+        }
+
+        Vector<String> resultList = new Vector<>(contentList);
+
+        resultList.insertElementAt(START_TEXT, 0);
+        resultList.add(END_TEXT);
+        refreshListener.refresh(offset, resultList, isAllDone);
+    }
+
     public void destroy() {
         refreshListener = null;
         if (threadList != null) {
@@ -111,38 +144,6 @@ public class QueryPerformer implements OnResponseListener {
                     runnable.setStop();
                 }
             }
-        }
-    }
-
-    private void passContent(String content) {
-        if (refreshListener != null) {
-            refreshListener.refresh(content);
-        }
-    }
-
-    private synchronized void passResult(Vector<String> contentList, boolean isAllDone) {
-
-        if (refreshListener == null) {
-            return;
-        }
-
-        StringBuilder stringBuilder = new StringBuilder();
-
-        if (isAllDone) {
-            stringBuilder.append(START_TEXT);
-            for (String result : contentList) {
-                stringBuilder.append(result);
-            }
-            stringBuilder.append(END_TEXT);
-            refreshListener.allDoneRefresh(oldText, stringBuilder.toString());
-        } else {
-            stringBuilder.append(oldText);
-            stringBuilder.append(START_TEXT);
-            for (String result : contentList) {
-                stringBuilder.append(result);
-            }
-            stringBuilder.append(END_TEXT);
-            refreshListener.refresh(stringBuilder.toString());
         }
     }
 

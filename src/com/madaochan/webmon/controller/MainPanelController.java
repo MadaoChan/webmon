@@ -1,12 +1,21 @@
 package com.madaochan.webmon.controller;
 
+import com.madaochan.webmon.connection.Connection;
 import com.madaochan.webmon.file.FileUtils;
 import com.madaochan.webmon.time.TimeUtils;
 
 import javax.swing.*;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Style;
+import javax.swing.text.StyleConstants;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.Vector;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 主界面控制器
@@ -25,15 +34,29 @@ public class MainPanelController implements RefreshListener {
     private int interval;
 
     private List<String> urlList;
-    private JTextArea textAreaInfo;
     private JButton buttonQuery;
+    private JTextPane textPaneMain;
 
     private QueryPerformer queryPerformer;
+    private ScheduledExecutorService scheduledExecutorService;
 
-    public MainPanelController(JTextArea textAreaInfo, JButton buttonQuery) {
-        this.textAreaInfo = textAreaInfo;
+    public MainPanelController(JTextPane textPaneMain, JButton buttonQuery) {
+        this.textPaneMain = textPaneMain;
         this.buttonQuery = buttonQuery;
+        initTextPane();
         refreshConfig();
+    }
+
+    private void initTextPane() {
+        Style def = textPaneMain.getStyledDocument().addStyle(null, null);
+        StyleConstants.setFontFamily(def, "verdana");
+        StyleConstants.setFontSize(def, 14);
+
+        Style normal = textPaneMain.addStyle("normal", def);
+
+        Style s = textPaneMain.addStyle("red", normal);
+        StyleConstants.setForeground(s, Color.RED);
+        textPaneMain.setParagraphAttributes(normal, true);
     }
 
     /**
@@ -85,7 +108,8 @@ public class MainPanelController implements RefreshListener {
      */
     public void doQuery() {
         buttonQuery.setEnabled(false);
-        queryPerformer = new QueryPerformer(urlList, textAreaInfo.getText(), this);
+        refreshConfig();
+        queryPerformer = new QueryPerformer(urlList, textPaneMain.getDocument().getLength(), this);
         queryPerformer.performQuery();
     }
 
@@ -93,45 +117,99 @@ public class MainPanelController implements RefreshListener {
      * 清屏
      */
     public void doClean() {
-        textAreaInfo.setText("");
+        textPaneMain.setText("");
     }
 
     /**
-     * 查询进度回调
-     * @param result 中间结果
+     * 开始轮询
      */
-    @Override
-    public void refresh(String result) {
-        textAreaInfo.setText("");
-        textAreaInfo.setText(result);
-        textAreaInfo.setCaretPosition(textAreaInfo.getDocument().getLength());
+    public void doPoll() {
+        if (scheduledExecutorService != null) {
+            scheduledExecutorService.shutdown();
+            scheduledExecutorService = null;
+        }
+        scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+        scheduledExecutorService.scheduleAtFixedRate(() -> {
+            System.out.println(TimeUtils.getCurrentTime() + "轮询开始");
+            doQuery();
+        },  1,1, TimeUnit.MINUTES);
     }
 
     /**
-     * 全部查询完成回调
-     * @param oldText 查询前的字符串
-     * @param result 总查询结果
+     * 停止轮询
      */
-    @Override
-    public void allDoneRefresh(String oldText, String result) {
+    public void stopPoll() {
+        System.out.println(TimeUtils.getCurrentTime() + "轮询停止");
+        if (scheduledExecutorService != null) {
+            scheduledExecutorService.shutdown();
+            scheduledExecutorService = null;
+        }
+    }
 
-        if (queryPerformer != null) {
-            queryPerformer.destroy();
-            queryPerformer = null;
+    @Override
+    public void refresh(int offset, Vector<String> result, boolean isAllDone) {
+
+        int count = 0;
+        for (String text : result) {
+            count += insertTextToTextPane(text, offset);
         }
 
-        textAreaInfo.setText("");
-        textAreaInfo.append(oldText);
-        textAreaInfo.append(result);
+        removeTempText(offset, count);
 
-        // 写文件
-        String writeLog = writeResultToFile(result);
+        if (isAllDone) {
+            if (queryPerformer != null) {
+                queryPerformer.destroy();
+                queryPerformer = null;
+            }
 
-        textAreaInfo.append(writeLog);
-        textAreaInfo.setCaretPosition(textAreaInfo.getDocument().getLength());
-        buttonQuery.setEnabled(true);
+            StringBuilder totalResult = new StringBuilder();
+            for (String text : result) {
+                totalResult.append(text);
+            }
+            String writeLog = writeResultToFile(totalResult.toString());
+            insertTextToTextPane(writeLog, textPaneMain.getDocument().getLength());
+            buttonQuery.setEnabled(true);
+        }
+    }
 
-        //TODO 发邮件
+    /**
+     * 删除中间结果
+     * @param offset 开始
+     * @param count 总大小
+     */
+    private void removeTempText(int offset, int count) {
+        try {
+            if (textPaneMain.getDocument().getLength() > offset + count) {
+                textPaneMain.getDocument().remove(offset + count,
+                        textPaneMain.getDocument().getLength() - offset - count);
+            }
+        } catch (BadLocationException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 追加结果字符串
+     * @param text 结果
+     * @param offset 插入偏移位
+     * @return 插入字符串长度
+     */
+    private int insertTextToTextPane(String text, int offset) {
+
+        if (text == null) {
+            return 0;
+        }
+
+        boolean isAbnormal = text.contains(Connection.ABNORMAL_STATE);
+        try {
+            textPaneMain.getDocument().insertString(
+                    offset,
+                    text, textPaneMain.getStyle(isAbnormal ? "red" : "normal"));
+            return text.length();
+        } catch (BadLocationException e) {
+            e.printStackTrace();
+            return 0;
+        }
     }
 
     /**
@@ -158,7 +236,7 @@ public class MainPanelController implements RefreshListener {
             queryPerformer.destroy();
             queryPerformer = null;
         }
-        textAreaInfo = null;
+        textPaneMain = null;
         buttonQuery = null;
     }
 }
