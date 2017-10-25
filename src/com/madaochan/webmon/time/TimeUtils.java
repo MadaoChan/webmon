@@ -9,7 +9,16 @@ public class TimeUtils {
      * @return 时间字符串
      */
     public static String getCurrentTime() {
+        return getFutureTime(0);
+    }
+
+    /**
+     * 获取未来的时间（格式yyyy-MM-dd HH:mm:ss）
+     * @param futureTimeMs 从当前算起的间隔
+     * @return 时间字符串
+     */
+    public static String getFutureTime(long futureTimeMs) {
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        return format.format(System.currentTimeMillis());
+        return format.format(System.currentTimeMillis() + futureTimeMs);
     }
 }

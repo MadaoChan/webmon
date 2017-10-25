@@ -1,4 +1,4 @@
-// 按行添加监控列表，以http://或者https://开头
+// 按行添加监控列表，网址以http://或者https://开头
 http://www.baidu.com
 http://www.163.com
 http://www.sina.com

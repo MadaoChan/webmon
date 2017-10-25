@@ -14,6 +14,9 @@ public class MainPanel {
     private JButton buttonClean;
     private JButton buttonPoll;
     private JTextPane textPaneMain;
+    private JLabel labelInterval;
+    private JFormattedTextField formattedTextFieldInterval;
+    private JLabel labelState;
 
     private MainPanelController controller;
     private boolean isPolling = false;
@@ -44,7 +47,7 @@ public class MainPanel {
 
     private MainPanelController getController() {
         if (controller == null) {
-            controller = new MainPanelController(textPaneMain, buttonQuery);
+            controller = new MainPanelController(textPaneMain, buttonQuery, formattedTextFieldInterval, labelState);
         }
         return controller;
     }

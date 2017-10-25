@@ -13,11 +13,59 @@ import java.util.Properties;
 public class FileUtils {
 
     /**
+     * 获取程序目录
+     * @return 目录
+     */
+    public String getRootDir() {
+        return System.getProperty("user.dir");
+    }
+
+    /**
+     * 写入配置文件
+     * @param location 路径
+     * @param key 配置key
+     * @param value 配置value
+     * @param comment 注释
+     */
+    public synchronized void writeProperties(String location, String key, String value, String comment) {
+
+        FileOutputStream fop = null;
+        File file;
+
+        try {
+            file = new File(location);
+            boolean isCreated = true;
+
+            if (!file.exists()) {
+                isCreated = file.createNewFile();
+            }
+            if (!isCreated) {
+                return;
+            }
+            Properties prop = readProperties(location);
+            fop = new FileOutputStream(file);
+            prop.setProperty(key, value);
+            prop.store(fop, comment);
+            fop.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (fop != null) {
+                try {
+                    fop.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    /**
      * 读取配置文件
      * @param location 配置文件路径
      * @return 配置文件
      */
-    public Properties readProperties(String location) {
+    public synchronized Properties readProperties(String location) {
         Properties prop = new Properties();
         File file = new File(location);
         if (!file.exists()) {

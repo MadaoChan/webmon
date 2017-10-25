@@ -5,9 +5,7 @@ import com.madaochan.webmon.file.FileUtils;
 import com.madaochan.webmon.time.TimeUtils;
 
 import javax.swing.*;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.Style;
-import javax.swing.text.StyleConstants;
+import javax.swing.text.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,22 +25,30 @@ public class MainPanelController implements RefreshListener {
     private final static String CONFIG_FILE_NAME = "/config.txt";
     private final static String URL_LIST_FILE_NAME = "/urls.txt";
     private final static String LOG_FILE_NAME = "/log.txt";
-    private final static int DEFAULT_INTERVAL_S = 60 * 60;  // 1小时
+
+    private final static String POLL_INTERVAL_PROP_KEY = "poll_interval";
+
+    // 默认轮询时间15分钟
+    private final static int DEFAULT_INTERVAL_M = 15;
 
     private String username;
     private String password;
-    private int interval;
 
     private List<String> urlList;
     private JButton buttonQuery;
     private JTextPane textPaneMain;
+    private JFormattedTextField textFieldInterval;
+    private JLabel labelState;
 
     private QueryPerformer queryPerformer;
     private ScheduledExecutorService scheduledExecutorService;
 
-    public MainPanelController(JTextPane textPaneMain, JButton buttonQuery) {
+    public MainPanelController(JTextPane textPaneMain, JButton buttonQuery,
+                               JFormattedTextField textFieldInterval, JLabel labelState) {
         this.textPaneMain = textPaneMain;
         this.buttonQuery = buttonQuery;
+        this.textFieldInterval = textFieldInterval;
+        this.labelState = labelState;
         initTextPane();
         refreshConfig();
     }
@@ -64,9 +70,8 @@ public class MainPanelController implements RefreshListener {
      */
     private void refreshConfig() {
         FileUtils fileUtils = new FileUtils();
-        String path = System.getProperty("user.dir");
-        ensureProperties(fileUtils.readProperties(path + CONFIG_FILE_NAME));
-        ensureUrls(fileUtils.readFile(path + URL_LIST_FILE_NAME));
+        ensureProperties(fileUtils.readProperties(fileUtils.getRootDir() + CONFIG_FILE_NAME));
+        ensureUrls(fileUtils.readFile(fileUtils.getRootDir() + URL_LIST_FILE_NAME));
     }
 
     /**
@@ -76,12 +81,14 @@ public class MainPanelController implements RefreshListener {
     private void ensureProperties(Properties prop) {
         username = prop.getProperty("username");
         password = prop.getProperty("password");
+        int interval = DEFAULT_INTERVAL_M;
         try {
-            interval = Integer.valueOf(prop.getProperty("interval"));
-            interval = (interval > 0) ? interval : DEFAULT_INTERVAL_S;
+            interval = Integer.valueOf(prop.getProperty(POLL_INTERVAL_PROP_KEY));
+            interval = (interval > 0) ? interval : DEFAULT_INTERVAL_M;
         } catch (NumberFormatException e) {
-            interval = DEFAULT_INTERVAL_S;
+            e.printStackTrace();
         }
+        textFieldInterval.setText(String.valueOf(interval));
     }
 
     /**
@@ -124,15 +131,50 @@ public class MainPanelController implements RefreshListener {
      * 开始轮询
      */
     public void doPoll() {
+
+        // 停止还没完毕的定时任务
         if (scheduledExecutorService != null) {
             scheduledExecutorService.shutdown();
             scheduledExecutorService = null;
         }
+
+        // 获取自定义轮询时间
+        int interval = DEFAULT_INTERVAL_M;
+        try {
+            interval = Integer.valueOf(textFieldInterval.getText());
+            interval = (interval > 0) ? interval : DEFAULT_INTERVAL_M;
+        } catch (NumberFormatException e) {
+            e.printStackTrace();
+        }
+
+        // 更新界面
+        textFieldInterval.setText(String.valueOf(interval));
+        textFieldInterval.setEditable(false);
+
+        // 时间写入配置文件
+        writeProperties(POLL_INTERVAL_PROP_KEY, String.valueOf(interval));
+
+        final long intervalMs = interval * 60 * 1000;
+
+        // 开启定时任务
         scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
         scheduledExecutorService.scheduleAtFixedRate(() -> {
             System.out.println(TimeUtils.getCurrentTime() + "轮询开始");
             doQuery();
-        },  1,1, TimeUnit.MINUTES);
+            labelState.setText("轮询已开始，下次轮询时间为：" + TimeUtils.getFutureTime(intervalMs));
+        },  interval, interval, TimeUnit.MINUTES);
+
+        labelState.setText("轮询已开始，下次轮询时间为：" + TimeUtils.getFutureTime(intervalMs));
+    }
+
+    /**
+     * 写配置文件
+     * @param key 配置Key
+     * @param value 配置value
+     */
+    private void writeProperties(String key, String value) {
+        FileUtils fileUtils = new FileUtils();
+        fileUtils.writeProperties(fileUtils.getRootDir() + CONFIG_FILE_NAME, key, value, "");
     }
 
     /**
@@ -140,10 +182,12 @@ public class MainPanelController implements RefreshListener {
      */
     public void stopPoll() {
         System.out.println(TimeUtils.getCurrentTime() + "轮询停止");
+        textFieldInterval.setEditable(true);
         if (scheduledExecutorService != null) {
             scheduledExecutorService.shutdown();
             scheduledExecutorService = null;
         }
+        labelState.setText("轮询未开始");
     }
 
     @Override
@@ -219,9 +263,8 @@ public class MainPanelController implements RefreshListener {
      */
     private String writeResultToFile(String result) {
         FileUtils fileUtils = new FileUtils();
-        String path = System.getProperty("user.dir");
 
-        boolean isWriteSuccess = fileUtils.writeFile(path + LOG_FILE_NAME, result);
+        boolean isWriteSuccess = fileUtils.writeFile(fileUtils.getRootDir() + LOG_FILE_NAME, result);
         String writeResult;
         if (isWriteSuccess) {
             writeResult = TimeUtils.getCurrentTime() + "\t查询记录写入" + LOG_FILE_NAME + "成功！\r\n";

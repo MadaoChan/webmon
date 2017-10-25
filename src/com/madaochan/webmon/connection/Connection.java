@@ -15,7 +15,7 @@ import java.util.List;
  */
 public class Connection {
 
-    public static String NORMAL_STATE = "200正常";
+    public static String NORMAL_STATE = "正常";
     public static String ABNORMAL_STATE = "异常";
     public static String QUERYING_STATE = "查询中…";
 
@@ -78,7 +78,7 @@ public class Connection {
         String translation;
         switch(resCode) {
             case HttpURLConnection.HTTP_OK:
-                translation = "200正常";
+                translation = "正常";
                 break;
 
             case HttpURLConnection.HTTP_FORBIDDEN:
@@ -86,7 +86,7 @@ public class Connection {
                 break;
 
             case HttpURLConnection.HTTP_NOT_FOUND:
-                translation = "【异常】404不存在";
+                translation = "【异常】404找不到页面";
                 break;
 
             case HttpURLConnection.HTTP_INTERNAL_ERROR:
