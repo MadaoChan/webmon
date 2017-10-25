@@ -276,6 +276,7 @@ public class MainPanelController implements RefreshListener {
             textPaneMain.getDocument().insertString(
                     offset,
                     text, textPaneMain.getStyle(isAbnormal ? "red" : "normal"));
+            textPaneMain.setCaretPosition(textPaneMain.getStyledDocument().getLength());
             return text.length();
         } catch (BadLocationException e) {
             e.printStackTrace();

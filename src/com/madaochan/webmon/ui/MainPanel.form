@@ -14,10 +14,13 @@
             <preferred-size width="1024" height="768"/>
           </grid>
         </constraints>
-        <properties/>
+        <properties>
+          <horizontalScrollBarPolicy value="30"/>
+          <verticalScrollBarPolicy value="20"/>
+        </properties>
         <border type="none"/>
         <children>
-          <component id="f7e6a" class="javax.swing.JTextPane" binding="textPaneMain">
+          <component id="f7e6a" class="com.madaochan.webmon.ui.NoWrapTextPane" binding="textPaneMain">
             <constraints/>
             <properties>
               <editable value="false"/>
