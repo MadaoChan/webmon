@@ -15,6 +15,7 @@ public class QueryPerformer implements OnResponseListener {
 
     private final String START_TEXT = "----------------------\r\n";
     private final String END_TEXT = "----------------------\r\n";
+    private Vector<String> tagList;
     private Vector<String> urlList;
     private Vector<String> resultList;
     private Vector<Boolean> doneList;
@@ -24,7 +25,8 @@ public class QueryPerformer implements OnResponseListener {
 
     private int offset;
 
-    public QueryPerformer(List<String> urlList, int offset, RefreshListener refreshListener) {
+    public QueryPerformer(List<String> tagList, List<String> urlList, int offset, RefreshListener refreshListener) {
+        this.tagList = new Vector<>(tagList);
         this.urlList = new Vector<>(urlList);
         this.offset = offset;
         this.refreshListener = refreshListener;
@@ -32,7 +34,7 @@ public class QueryPerformer implements OnResponseListener {
     }
 
     private void init() {
-        count = urlList.size();
+        count = Math.min(urlList.size(), tagList.size());
 
         resultList = new Vector<>();
         resultList.setSize(count);
@@ -54,7 +56,7 @@ public class QueryPerformer implements OnResponseListener {
         }
 
         for(int i=0; i<count; i++) {
-            ConnectionRunnable connectionRunnable = new ConnectionRunnable(i, urlList.get(i), this);
+            ConnectionRunnable connectionRunnable = new ConnectionRunnable(i, tagList.get(i), urlList.get(i), this);
             threadList.add(connectionRunnable);
             Thread thread = new Thread(connectionRunnable);
             thread.start();
@@ -66,8 +68,8 @@ public class QueryPerformer implements OnResponseListener {
         System.out.println("ThreadStart " + position);
         if (position >= 0 && position < count) {
             String start = TimeUtils.getCurrentTime()
-                    + "\t" + Connection.QUERYING_STATE + "\t" + urlList.get(position)
-                    + "\r\n";
+                    + "\t" + Connection.QUERYING_STATE + "\t\t\t" + tagList.get(position) + "\t\t"
+                    + urlList.get(position) + "\r\n";
             resultList.set(position, start);
             passResult(resultList, false);
         }
@@ -153,12 +155,14 @@ public class QueryPerformer implements OnResponseListener {
     private static class ConnectionRunnable implements Runnable {
 
         private int position;
+        private String tag;
         private String url;
         private boolean isStop = false;
         private OnResponseListener listener;
 
-        public ConnectionRunnable(int position, String url, OnResponseListener listener) {
+        public ConnectionRunnable(int position, String tag, String url, OnResponseListener listener) {
             this.position = position;
+            this.tag = tag;
             this.url = url;
             this.listener = listener;
         }
@@ -177,7 +181,7 @@ public class QueryPerformer implements OnResponseListener {
                 System.out.println("ThreadStart listenerRef null " + position);
             }
 
-            String resCode = new Connection().getResponseCode(url);
+            String resCode = new Connection().getResponseCode(tag, url);
             if (!isStop && listener != null) {
                 listener.onQueryThreadFinish(position, resCode);
             } else {

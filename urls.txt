@@ -1,7 +1,10 @@
-// �������Ӽ���б�����ַ��http://����https://��ͷ
-http://www.baidu.com
-http://www.163.com
-http://www.sina.com
-http://psnine.com
-http://www.qq.com
-http://blog.csdn.net
+﻿// 按行添加监控列表
+// 网址名称和网址中间使用半角逗号,作为分隔符
+// 网址以http://或者https://开头
+
+// 可使用注释符号//
+
+// 例：
+百度,http://www.baidu.com
+网易,http://www.163.com
+新浪,http://www.sina.com

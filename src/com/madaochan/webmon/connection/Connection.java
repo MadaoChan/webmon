@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
 import java.net.URL;
-import java.util.List;
 
 /**
  * 链接类
@@ -19,30 +18,25 @@ public class Connection {
     public static String ABNORMAL_STATE = "异常";
     public static String QUERYING_STATE = "查询中…";
 
-    public String getResponseCodes(List<String> urlList) {
-        int size = urlList.size();
-        StringBuffer stringBuffer = new StringBuffer();
-        for (int i=0; i<size; i++) {
-            stringBuffer.append(getResponseCode(urlList.get(i)));
-        }
-        return stringBuffer.toString();
-    }
-
     /**
-     * 获取指定URL的响应码
-     * @param urlStr url
+     * 获取指定URL的响应码（默认5s超时时间）
+     * @param tag 网址标签
+     * @param urlStr 网址url
+     * @return 查询结果
      */
-    public String getResponseCode(String urlStr) {
+    public String getResponseCode(String tag, String urlStr) {
         // 默认5秒超时
-        return getResponseCode(urlStr, 1000 * 5);
+        return getResponseCode(tag, urlStr, 1000 * 5);
     }
 
     /**
      * 获取指定URL的响应码
-     * @param urlStr url
+     * @param tag 网址标签
+     * @param urlStr 网址url
      * @param timeOutMs 超时时间
+     * @return 查询结果
      */
-    public String getResponseCode(String urlStr, int timeOutMs) {
+    public String getResponseCode(String tag, String urlStr, int timeOutMs) {
         String response;
         HttpURLConnection conn = null;
         try {
@@ -54,13 +48,13 @@ public class Connection {
             conn.connect();
             long resTime = System.currentTimeMillis() - startTime;
             response = TimeUtils.getCurrentTime() + "\t" + translateResCode(conn.getResponseCode()) +
-                    "\t响应时间:" + resTime + "ms\t\t"+ urlStr;
+                    "\t响应时间:" + resTime + "ms\t\t" + tag + "\t\t" + urlStr;
             conn.disconnect();
         } catch (SocketTimeoutException e) {
-            response = TimeUtils.getCurrentTime() + "\t【异常】连接超时" + "\t\t\t" + urlStr;
+            response = TimeUtils.getCurrentTime() + "\t【异常】连接超时" + "\t\t\t" + tag + "\t\t" + urlStr;
         } catch (IOException e) {
             e.printStackTrace();
-            response = TimeUtils.getCurrentTime() + "\t【异常】无法建立连接" + "\t\t\t" + urlStr;
+            response = TimeUtils.getCurrentTime() + "\t【异常】无法建立连接" + "\t\t\t" + tag + "\t\t" + urlStr;
         } finally {
             if (conn != null) {
                 conn.disconnect();

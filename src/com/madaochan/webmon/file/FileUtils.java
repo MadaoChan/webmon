@@ -103,15 +103,17 @@ public class FileUtils {
             return lineList;
         }
         try {
-            FileReader reader = new FileReader(file);
-            BufferedReader br = new BufferedReader(reader);
+            FileInputStream fileInputStream = new FileInputStream(location);
+            InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream, "UTF-8");
+            BufferedReader br = new BufferedReader(inputStreamReader);
 
             String str;
             while((str = br.readLine()) != null) {
                 lineList.add(str);
             }
             br.close();
-            reader.close();
+            inputStreamReader.close();
+            fileInputStream.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
