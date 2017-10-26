@@ -311,7 +311,7 @@ public class MainPanelController implements RefreshListener, TransportListener {
      */
     private void sendEmail(String result) {
         Thread thread = new Thread(new SendMailRunnable(result, this));
-//        thread.start();
+        thread.start();
     }
 
     public void destroy() {
