@@ -18,7 +18,10 @@ public class Constants {
     public final static String POLL_INTERVAL_PROP_KEY = "poll_interval";
 
     // 文件分隔符
-    public final static String SPLITTER = ",";
+    public final static String FILE_SPLITTER = ",";
+
+    // 邮件分隔符
+    public final static String MAIL_ADDR_SPLITTER = " ";
 
     // 默认轮询时间15分钟
     public final static int DEFAULT_INTERVAL_M = 15;

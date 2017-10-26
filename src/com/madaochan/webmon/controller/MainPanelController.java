@@ -6,8 +6,10 @@ import com.madaochan.webmon.file.FileUtils;
 import com.madaochan.webmon.mail.SendMailRunnable;
 import com.madaochan.webmon.time.TimeUtils;
 
+import javax.mail.Address;
 import javax.mail.event.TransportEvent;
 import javax.mail.event.TransportListener;
+import javax.mail.internet.InternetAddress;
 import javax.swing.*;
 import javax.swing.text.*;
 import java.awt.*;
@@ -118,7 +120,7 @@ public class MainPanelController implements RefreshListener, TransportListener {
             }
 
             // 分离网页标签和网页URL，例：百度,http://www.baidu.com
-            String[] tagUrl = url.split(Constants.SPLITTER, 2);
+            String[] tagUrl = url.split(Constants.FILE_SPLITTER, 2);
 
             if (tagUrl.length == 2) {
 
@@ -328,15 +330,77 @@ public class MainPanelController implements RefreshListener, TransportListener {
     @Override
     public void messageDelivered(TransportEvent transportEvent) {
         System.out.print("邮件全部发完");
+        logDeliverResult(transportEvent);
     }
 
     @Override
     public void messageNotDelivered(TransportEvent transportEvent) {
-        System.out.print("邮件发不出");
+        System.out.print("邮件无法发送成功");
+        logDeliverResult(transportEvent);
     }
 
     @Override
     public void messagePartiallyDelivered(TransportEvent transportEvent) {
         System.out.print("邮件部分发完");
+        logDeliverResult(transportEvent);
+    }
+
+    private void logDeliverResult(TransportEvent transportEvent) {
+        // 没有发出的列表
+        Address[] unsentList = transportEvent.getValidUnsentAddresses();
+        int unsentCount = unsentList == null ? 0 : unsentList.length;
+
+        // 无效的列表
+        Address[] invalidList = transportEvent.getInvalidAddresses();
+        int invalidCount = invalidList == null ? 0 : invalidList.length;
+
+        // 成功的列表
+        Address[] sentList = transportEvent.getValidSentAddresses();
+        int sentCount = sentList == null ? 0 : sentList.length;
+
+        int total = unsentCount + invalidCount + sentCount;
+
+        if (total == sentCount) {
+            String allDone = TimeUtils.getCurrentTime() + "\t邮件全部发送成功 " + sentCount + "/" + total + "\r\n";
+            insertTextToTextPane(allDone, textPaneMain.getDocument().getLength());
+
+        } else {
+            StringBuilder stringBuilder = new StringBuilder();
+            String start = TimeUtils.getCurrentTime() + "\t【异常】邮件部分发送成功 " + sentCount + "/" + total + "\r\n";
+            stringBuilder.append(start);
+
+            // 无效的邮件地址在发送之前已经被过滤掉，所以这里不一定会有内容
+            if (invalidCount > 0) {
+                stringBuilder.append("无效邮件地址：");
+                logSent(stringBuilder, invalidList);
+            }
+
+            // 若使用QQ邮箱代发，就算邮件地址不存在，SMTP也会接受地址
+            // 只要地址被接受，javamail就当作发送成功
+            // 而SMTP服务器正在不断地重试发送邮件到不存在的邮箱里
+            // 换言之，unsentCount不一定>0
+            if (unsentCount > 0) {
+                stringBuilder.append("发送失败的邮件地址：");
+                logSent(stringBuilder, sentList);
+            }
+
+            insertTextToTextPane(stringBuilder.toString(), textPaneMain.getDocument().getLength());
+        }
+    }
+
+    /**
+     * 处理发送完毕回调的显示字符串
+     * @param builder StringBuilder
+     * @param list 列表
+     */
+    private void logSent(StringBuilder builder, Address[] list) {
+
+        for (Address unsent : list) {
+            if (unsent instanceof InternetAddress) {
+                builder.append(((InternetAddress) unsent).getAddress())
+                        .append("\t");
+            }
+            builder.append("\r\n");
+        }
     }
 }

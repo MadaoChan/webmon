@@ -67,7 +67,7 @@ public class MailSender {
             return null;
         }
 
-        String[] rawReceiver = receiversRawText.split(Constants.SPLITTER);
+        String[] rawReceiver = receiversRawText.split(Constants.MAIL_ADDR_SPLITTER);
         ArrayList<String> receiverList = new ArrayList<>();
         Pattern pattern = Pattern.compile(MAIL_REGEX);
 
@@ -103,6 +103,8 @@ public class MailSender {
         // 设置邮件服务器主机名
         props.setProperty("mail.smtp.host", smtpHost);
         props.put("mail.smtp.port", port);
+        props.put("mail.smtps.timeout", 15000);
+        props.put("mail.smtps.connectiontimeout", 15000);
 
         if (isSSL) {
             String SSL_FACTORY="javax.net.ssl.SSLSocketFactory";
