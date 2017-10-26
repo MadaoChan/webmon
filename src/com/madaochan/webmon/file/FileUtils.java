@@ -72,20 +72,32 @@ public class FileUtils {
             return prop;
         }
 
+        BufferedReader br = null;
+        InputStreamReader isr = null;
         FileInputStream in = null;
         try {
             in = new FileInputStream(file);
-            prop.load(in);
+            isr = new InputStreamReader(in, "gb2312");
+            br = new BufferedReader(isr);
+            prop.load(br);
+            br.close();
+            isr.close();
             in.close();
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            if (in != null) {
-                try {
+            try {
+                if (in != null) {
                     in.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
                 }
+                if (isr != null) {
+                    isr.close();
+                }
+                if (br != null) {
+                    br.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
         return prop;

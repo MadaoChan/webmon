@@ -10,8 +10,6 @@ import javax.mail.event.TransportListener;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeUtility;
-import java.io.UnsupportedEncodingException;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Properties;
@@ -127,7 +125,7 @@ public class MailSender {
             // 创建默认的 MimeMessage 对象。
             MimeMessage message = new MimeMessage(session);
             message.setFrom(new InternetAddress(username));
-            message.setSubject(MimeUtility.encodeText(mailSubject, "UTF-8", "B"));
+            message.setSubject(mailSubject);
             message.setContent(mailContent, "text/html;charset=utf-8" );
 
             // 发邮件
@@ -136,7 +134,7 @@ public class MailSender {
             transport.connect(username, password);
             transport.sendMessage(message, to);
 
-        } catch (MessagingException | UnsupportedEncodingException mex) {
+        } catch (MessagingException mex) {
             mex.printStackTrace();
         }
     }
