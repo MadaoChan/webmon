@@ -13,6 +13,7 @@ public class SendMailRunnable implements Runnable {
 
     private String content;
     private TransportListener listener;
+    private boolean isAbnormal = false;
 
     public SendMailRunnable(String content, TransportListener listener) {
         this.content = content;
@@ -21,8 +22,12 @@ public class SendMailRunnable implements Runnable {
 
     @Override
     public void run() {
-        MailSender sender = new MailSender(processContent(content), listener);
-        sender.sendMail();
+
+        String processedContent = processContent(content);
+        if (isAbnormal) {
+            MailSender sender = new MailSender(processedContent, listener);
+            sender.sendMail();
+        }
     }
 
     /**
@@ -43,6 +48,7 @@ public class SendMailRunnable implements Runnable {
             line += "<br/>";
             // 检查每行内容，包含“异常”则变红色
             if (line.contains(Connection.ABNORMAL_STATE)) {
+                isAbnormal = true;
                 line = "<font color=\"red\">" + line + "</font>";
             }
             result.append(line);
