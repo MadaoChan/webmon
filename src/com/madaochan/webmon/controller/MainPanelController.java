@@ -219,12 +219,55 @@ public class MainPanelController implements RefreshListener, TransportListener {
         fileUtils.writeProperties(fileUtils.getRootDir() + Constants.CONFIG_FILENAME, key, value, "");
     }
 
+    /**
+     * 压缩网址部分为最长50个字符串，中间用...省略
+     * @param text 原始字符串
+     * @return 处理后的字符串
+     */
+    private String processDisplayText(String text) {
+        if (text == null) {
+            return "";
+        }
+
+        String[] splitText = text.split("http");
+        if (splitText.length == 2) {
+            splitText[1] = "http" + splitText[1];
+            return splitText[0] + ellipsizeMiddle(splitText[1], 50);
+        } else if (splitText.length > 2){
+            return text;
+        } else {
+            return splitText[0];
+        }
+    }
+
+    /**
+     * 省略中间字符串（中间省略用...表示）
+     * @param text 原始字符串
+     * @param totalLength 处理后的总长度
+     * @return 处理后的字符串
+     */
+    private String ellipsizeMiddle(String text, int totalLength) {
+        if (text == null) {
+            return "";
+        }
+
+        int textLength = text.length();
+        if (textLength + 3 < totalLength || totalLength < 1) {
+            return text;
+        }
+
+        String headPart = text.substring(0, totalLength / 2);
+        String tailPart = text.substring(textLength - totalLength / 2,textLength);
+        return headPart + "..." + tailPart;
+    }
+
     @Override
     public void refresh(int offset, Vector<String> result, boolean isAllDone) {
 
         int count = 0;
         for (int position = result.size()-1; position >= 0; position--) {
-            count += insertTextToTextPane(result.get(position), offset);
+            String displayLine = result.get(position);
+            count += insertTextToTextPane(processDisplayText(displayLine), offset);
         }
 
         removeTempText(offset, count);

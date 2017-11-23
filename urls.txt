@@ -8,4 +8,4 @@
 百度,http://www.baidu.com
 网易,http://www.163.com
 新浪,http://www.sina.com
-Google,https://www.google.com
+StackOverflow,https://stackoverflow.com/questions/13988296/locking-landscape-device-orientation
