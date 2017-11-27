@@ -54,7 +54,7 @@ public class MainPanel {
     }
 
     public static void main(String[] args) {
-        JFrame frame = new JFrame("网页状态查询器 v0.75 Build171123");
+        JFrame frame = new JFrame("网页状态查询器 v0.76 Build171123");
         frame.setContentPane(new MainPanel().panelMain);
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.pack();

@@ -220,7 +220,7 @@ public class MainPanelController implements RefreshListener, TransportListener {
     }
 
     /**
-     * 压缩网址部分为最长50个字符串，中间用...省略
+     * 压缩网址部分为最长30个字符串，中间用...省略
      * @param text 原始字符串
      * @return 处理后的字符串
      */
@@ -232,7 +232,7 @@ public class MainPanelController implements RefreshListener, TransportListener {
         String[] splitText = text.split("http");
         if (splitText.length == 2) {
             splitText[1] = "http" + splitText[1];
-            return splitText[0] + ellipsizeMiddle(splitText[1], 50);
+            return splitText[0] + ellipsizeMiddle(splitText[1], 30);
         } else if (splitText.length > 2){
             return text;
         } else {
